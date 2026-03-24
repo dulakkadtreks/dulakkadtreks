@@ -29,8 +29,8 @@ export default function Home() {
   const completed = treks.filter(t => t.status === "completed");
 
   return (
-    <div className="p-5 max-w-md mx-auto">
-      <h1 className="text-2xl font-bold mb-4 text-center">
+    <div className="min-h-screen bg-gray-100 p-4 max-w-md mx-auto">
+      <h1 className="text-2xl font-bold text-center mb-5">
         Dullakad Treks 🏔️
       </h1>
 
@@ -38,12 +38,9 @@ export default function Home() {
       <h2 className="text-lg font-semibold mb-2">Upcoming Treks</h2>
 
       {upcoming.map((t, i) => (
-        <div key={i} className="bg-white shadow rounded-lg mb-4 overflow-hidden">
+        <div key={i} className="bg-white shadow rounded-xl mb-4 overflow-hidden">
           {t.image && (
-            <img
-              src={t.image}
-              className="w-full h-40 object-cover"
-            />
+            <img src={t.image} className="w-full h-40 object-cover" />
           )}
 
           <div className="p-3">
@@ -67,7 +64,7 @@ export default function Home() {
       <h2 className="text-lg font-semibold mt-6 mb-2">Previous Treks</h2>
 
       {completed.map((t, i) => (
-        <div key={i} className="bg-gray-100 p-3 rounded mb-3">
+        <div key={i} className="bg-gray-200 p-3 rounded mb-3">
           <h3 className="font-bold">{t.name}</h3>
           <p>{t.date} | {t.location}</p>
         </div>

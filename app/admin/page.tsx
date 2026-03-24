@@ -3,9 +3,9 @@
 import { useState, useEffect } from "react";
 import { db, auth } from "@/lib/firebase";
 import { addDoc, collection } from "firebase/firestore";
-import { onAuthStateChanged } from "firebase/auth";
+import { onAuthStateChanged, signOut } from "firebase/auth";
 
-const ADMIN_EMAIL = "your@email.com"; // 🔐 change this
+const ADMIN_EMAIL = "admin@gmail.com";
 
 export default function Admin() {
   const [trek, setTrek] = useState({
@@ -17,11 +17,10 @@ export default function Admin() {
     image: "",
   });
 
-  // 🔐 Protect admin route
+  // 🔐 Protect admin
   useEffect(() => {
     onAuthStateChanged(auth, (user) => {
       if (!user || user.email !== ADMIN_EMAIL) {
-        alert("Access Denied");
         window.location.href = "/login";
       }
     });
@@ -29,7 +28,6 @@ export default function Admin() {
 
   const saveTrek = async () => {
     await addDoc(collection(db, "treks"), trek);
-
     alert("Trek Added ✅");
 
     setTrek({
@@ -42,12 +40,22 @@ export default function Admin() {
     });
   };
 
+  // 🚪 Logout
+  const logout = async () => {
+    await signOut(auth);
+    window.location.href = "/login";
+  };
+
   return (
     <div className="min-h-screen bg-gray-100 p-5">
       <div className="max-w-md mx-auto bg-white p-5 rounded-xl shadow">
-        <h1 className="text-xl font-bold mb-4 text-center">
-          Add Trek 🏔️
-        </h1>
+
+        <div className="flex justify-between mb-4">
+          <h1 className="text-xl font-bold">Admin Panel</h1>
+          <button onClick={logout} className="text-red-500 text-sm">
+            Logout
+          </button>
+        </div>
 
         <input
           placeholder="Trek Name"
