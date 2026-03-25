@@ -10,6 +10,7 @@ type Trek = {
   name: string;
   date: string;
   location: string;
+  leader?: string;
   price: string;
   status: string;
   image?: string;
@@ -32,7 +33,7 @@ function getTrekImages(t: Trek): string[] {
   return [];
 }
 
-const emptyTrek = { name: "", date: "", location: "", price: "", status: "upcoming" };
+const emptyTrek = { name: "", date: "", location: "", leader: "", price: "", status: "upcoming" };
 
 export default function Admin() {
   const [trek, setTrek] = useState<Trek>(emptyTrek);
@@ -110,6 +111,7 @@ export default function Admin() {
       name: t.name,
       date: t.date,
       location: t.location,
+      leader: t.leader || "",
       price: t.price,
       status: t.status,
     });
@@ -185,6 +187,8 @@ export default function Admin() {
               value={trek.date} onChange={(e) => setTrek({ ...trek, date: e.target.value })} />
             <input className={field} placeholder="Location"
               value={trek.location} onChange={(e) => setTrek({ ...trek, location: e.target.value })} />
+            <input className={field} placeholder="Trek Leader (optional)"
+              value={trek.leader || ""} onChange={(e) => setTrek({ ...trek, leader: e.target.value })} />
             <input className={field} placeholder="Price (₹)"
               value={trek.price} onChange={(e) => setTrek({ ...trek, price: e.target.value })} />
             <select className={field} value={trek.status}
@@ -271,8 +275,9 @@ export default function Admin() {
                           {t.status}
                         </span>
                       </div>
-                      <p className="text-xs text-white/40 truncate">
+                      <p className="text-xs text-white/40 truncate mt-1">
                         {t.date} · {t.location} · ₹{t.price}
+                        {t.leader && ` · Leader: ${t.leader}`}
                       </p>
                     </div>
 

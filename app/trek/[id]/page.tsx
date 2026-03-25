@@ -10,6 +10,7 @@ type Trek = {
   name: string;
   date: string;
   location: string;
+  leader?: string;
   price: string;
   status: string;
   image?: string;
@@ -119,10 +120,16 @@ export default function TrekPage() {
           <h1 className="text-4xl sm:text-6xl font-black leading-tight tracking-tight mb-2">
             {trek.name}
           </h1>
-          <div className="flex flex-wrap gap-4 text-white/60 sm:text-lg">
+          <div className="flex flex-wrap gap-4 text-white/60 sm:text-lg mb-2">
             <span className="flex items-center gap-1.5"><span>📅</span>{trek.date}</span>
             <span className="flex items-center gap-1.5"><span>📍</span>{trek.location}</span>
           </div>
+          {trek.leader && (
+            <div className="flex items-center gap-2 text-white/80">
+              <span className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-xs">👤</span>
+              <span className="text-sm">Led by <strong className="text-white">{trek.leader}</strong></span>
+            </div>
+          )}
         </div>
       </div>
 
