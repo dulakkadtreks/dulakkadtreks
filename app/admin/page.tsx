@@ -5,7 +5,6 @@ import { db, auth } from "@/lib/firebase";
 import { addDoc, collection } from "firebase/firestore";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 
-const ADMIN_EMAIL = "admin@gmail.com";
 
 export default function Admin() {
   const [trek, setTrek] = useState({
@@ -20,7 +19,7 @@ export default function Admin() {
   // 🔐 Protect admin
   useEffect(() => {
     onAuthStateChanged(auth, (user) => {
-      if (!user || user.email !== ADMIN_EMAIL) {
+      if (!user) {
         window.location.href = "/login";
       }
     });

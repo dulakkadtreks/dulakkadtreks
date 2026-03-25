@@ -4,9 +4,6 @@ import { useState } from "react";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 
-// 🔐 CHANGE THIS
-const ADMIN_EMAIL = "admin@gmail.com";
-const ADMIN_PASSWORD = "123456";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -14,11 +11,6 @@ export default function Login() {
   const [show, setShow] = useState(false);
 
   const login = async () => {
-    // extra layer
-    if (email !== ADMIN_EMAIL || password !== ADMIN_PASSWORD) {
-      alert("Access Denied");
-      return;
-    }
 
     try {
       await signInWithEmailAndPassword(auth, email, password);
