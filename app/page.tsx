@@ -171,7 +171,7 @@ export default function Home() {
           </span>
 
           <h1 className="text-6xl sm:text-7xl md:text-8xl font-black leading-[1.05] tracking-tighter text-white drop-shadow-2xl">
-            Dullakad<br className="sm:hidden" />
+            Dulakkad<br className="sm:hidden" />
             <span className="relative inline-block ml-0 sm:ml-4">
               <span className="bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400">
                 Treks
@@ -385,11 +385,11 @@ export default function Home() {
              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-400 to-cyan-500 flex items-center justify-center shadow-[0_0_10px_rgba(16,185,129,0.3)]">
                <span className="text-white font-bold text-sm">D</span>
              </div>
-             <span className="font-bold text-slate-200 tracking-wide text-lg">Dullakad Treks</span>
+             <span className="font-bold text-slate-200 tracking-wide text-lg">Dulakkad Treks</span>
           </div>
           <div className="text-center md:text-right">
             <p className="text-slate-400 text-sm font-medium">
-              © {new Date().getFullYear()} Dullakad Treks. Curating adventures and redefining wilderness.
+              © {new Date().getFullYear()} Dulakkad Treks. Curating adventures and redefining wilderness.
             </p>
           </div>
         </div>

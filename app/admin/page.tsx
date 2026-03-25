@@ -60,6 +60,7 @@ export default function Admin() {
   const [activeTab, setActiveTab] = useState<"treks" | "bookings">("treks");
   const [bookingsList, setBookingsList] = useState<Booking[]>([]);
   const [loadingBookings, setLoadingBookings] = useState(true);
+  const [editingBooking, setEditingBooking] = useState<Booking | null>(null);
 
   // ✨ AI Description Generation
   const generateDescription = async () => {
@@ -112,16 +113,6 @@ export default function Admin() {
 
   useEffect(() => {
     fetchTreks();
-    const fetchBookings = async () => {
-      setLoadingBookings(true);
-      try {
-        const snapshot = await getDocs(collection(db, "bookings"));
-        const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() } as Booking));
-        data.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-        setBookingsList(data);
-      } catch (err) { }
-      setLoadingBookings(false);
-    };
     fetchBookings();
   }, []);
 
@@ -197,6 +188,46 @@ export default function Admin() {
     setTreksList((prev) => prev.filter((t) => t.id !== id));
     
     if (editingId === id) resetForm();
+  };
+
+  // 📋 Booking Management
+  const fetchBookings = async () => {
+    setLoadingBookings(true);
+    try {
+      const snapshot = await getDocs(collection(db, "bookings"));
+      const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() } as Booking));
+      data.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      setBookingsList(data);
+    } catch (err) { }
+    setLoadingBookings(false);
+  };
+
+  const handleDeleteBooking = async (id: string, name: string) => {
+    if (!confirm(`Are you sure you want to delete the inquiry from "${name}"?`)) return;
+    setSaving(true);
+    try {
+      await deleteDoc(doc(db, "bookings", id));
+      setBookingsList(prev => prev.filter(b => b.id !== id));
+      alert("Inquiry Deleted ✅");
+    } catch (err) {
+      alert("Failed to delete inquiry");
+    }
+    setSaving(false);
+  };
+
+  const handleUpdateBooking = async () => {
+    if (!editingBooking) return;
+    setSaving(true);
+    try {
+      const { id, ...data } = editingBooking;
+      await updateDoc(doc(db, "bookings", id), data);
+      setBookingsList(prev => prev.map(b => b.id === id ? editingBooking : b));
+      setEditingBooking(null);
+      alert("Inquiry Updated ✅");
+    } catch (err) {
+      alert("Failed to update inquiry");
+    }
+    setSaving(false);
   };
 
   const resetForm = () => {
@@ -400,28 +431,128 @@ export default function Admin() {
                 <p className="text-white/40">No inquiries yet.</p>
               </div>
             ) : (
-              <div className="space-y-3">
-                {bookingsList.map((b) => (
-                  <div key={b.id} className="flex items-center justify-between gap-4 p-4 rounded-xl border bg-white/5 border-white/10 hover:bg-white/10 transition-all">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h3 className="font-bold truncate text-white/90">{b.userName}</h3>
-                        <span className="text-[10px] text-white/40 bg-white/10 px-2 py-0.5 rounded-full">{new Date(b.createdAt).toLocaleDateString()}</span>
+              <div className="space-y-8">
+                {Object.entries(
+                  bookingsList.reduce((acc, current) => {
+                    const key = current.trekName || "Unknown Trek";
+                    if (!acc[key]) acc[key] = [];
+                    acc[key].push(current);
+                    return acc;
+                  }, {} as Record<string, Booking[]>)
+                ).map(([trekName, leads]) => {
+                  // De-duplicate: Keep only the latest lead per phone number for this trek
+                  const uniqueLeads = Array.from(
+                    leads.reduce((map, lead) => {
+                      const phone = lead.userPhone.replace(/\s+/g, "");
+                      if (!map.has(phone) || new Date(lead.createdAt) > new Date(map.get(phone)!.createdAt)) {
+                        map.set(phone, lead);
+                      }
+                      return map;
+                    }, new Map<string, Booking>()).values()
+                  ).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+                  return (
+                    <div key={trekName} className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden shadow-xl">
+                      <div className="bg-white/10 px-6 py-4 flex justify-between items-center border-b border-white/5">
+                        <div className="flex items-center gap-3">
+                          <span className="text-xl">🏔️</span>
+                          <h3 className="font-bold text-lg text-emerald-400 tracking-tight">{trekName}</h3>
+                        </div>
+                        <span className="text-[10px] font-black bg-emerald-500/20 text-emerald-300 px-3 py-1 rounded-full uppercase tracking-widest border border-emerald-500/20">
+                          {uniqueLeads.length} Unique Leads
+                        </span>
                       </div>
-                      <p className="text-xs text-white/40 truncate mt-1">
-                        📞 <a href={`https://wa.me/91${b.userPhone}`} target="_blank" rel="noopener noreferrer" className="text-emerald-400 hover:underline">{b.userPhone}</a>
-                        <span className="mx-2">•</span> 
-                        Trek: {b.trekName} ({b.trekDate})
-                      </p>
+                      
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-left text-sm border-collapse">
+                          <thead>
+                            <tr className="bg-white/[0.02] text-white/30 uppercase text-[10px] tracking-widest font-black border-b border-white/5">
+                              <th className="px-6 py-4">Participant Name</th>
+                              <th className="px-6 py-4">Contact Details</th>
+                              <th className="px-6 py-4">Inquiry Date</th>
+                              <th className="px-6 py-4 text-center">Quick Connect</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-white/5">
+                            {uniqueLeads.map((b) => (
+                              <tr key={b.id} className="hover:bg-white/[0.03] transition-colors group">
+                                <td className="px-6 py-4 font-bold text-white/90 group-hover:text-emerald-400 transition-colors">
+                                  {b.userName}
+                                </td>
+                                <td className="px-6 py-4">
+                                  <span className="text-white/60 font-medium tabular-nums">{b.userPhone}</span>
+                                </td>
+                                <td className="px-6 py-4 text-white/30 text-xs">
+                                  {new Date(b.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                                </td>
+                                <td className="px-6 py-4">
+                                  <div className="flex items-center justify-center gap-2">
+                                    <a href={`https://wa.me/91${b.userPhone.replace(/\s+/g, "")}`} 
+                                       target="_blank" rel="noopener noreferrer" 
+                                       className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center hover:bg-emerald-500 hover:text-white transition-all duration-300 shadow-lg shadow-emerald-500/10" title="WhatsApp Chat">
+                                      <svg className="w-5 h-5" viewBox="0 0 32 32" fill="currentColor"><path d="M16 2C8.27 2 2 8.27 2 16c0 2.44.66 4.82 1.9 6.9L2 30l7.35-1.87A13.9 13.9 0 0016 30c7.73 0 14-6.27 14-14S23.73 2 16 2zm0 25.2a11.17 11.17 0 01-5.7-1.56l-.41-.24-4.36 1.11 1.14-4.25-.27-.44A11.2 11.2 0 1116 27.2zm6.14-8.35c-.34-.17-2-.98-2.3-1.09-.31-.11-.54-.17-.77.17-.22.34-.87 1.09-1.07 1.32-.2.22-.39.25-.73.08-.34-.17-1.44-.53-2.74-1.69a10.3 10.3 0 01-1.9-2.36c-.2-.34-.02-.52.15-.69l.5-.57c.16-.19.21-.34.32-.56.1-.22.05-.42-.03-.59-.08-.17-.77-1.86-1.06-2.55-.28-.67-.57-.58-.77-.59H9.7c-.22 0-.59.08-.9.42C8.48 10.64 7.6 11.5 7.6 13.2s1.16 3.36 1.32 3.6c.17.22 2.28 3.49 5.53 4.9.77.33 1.37.53 1.84.68.77.24 1.47.21 2.02.13.62-.09 1.9-.78 2.17-1.53.27-.75.27-1.4.19-1.53-.08-.14-.3-.22-.64-.38z" /></svg>
+                                    </a>
+                                    <a href={`tel:${b.userPhone.replace(/\s+/g, "")}`} 
+                                       className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-400 flex items-center justify-center hover:bg-blue-500 hover:text-white transition-all duration-300 shadow-lg shadow-blue-500/10" title="Direct Call">
+                                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>
+                                    </a>
+                                    <button onClick={() => setEditingBooking(b)}
+                                       className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center hover:bg-amber-500 hover:text-white transition-all duration-300 shadow-lg" title="Edit Lead">
+                                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                                    </button>
+                                    <button onClick={() => handleDeleteBooking(b.id, b.userName)}
+                                       className="w-10 h-10 rounded-xl bg-red-500/10 text-red-500 flex items-center justify-center hover:bg-red-500 hover:text-white transition-all duration-300 shadow-lg" title="Delete Lead">
+                                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                    </button>
+                                  </div>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )
           )}
         </div>
 
       </div>
+
+      {/* 📝 Edit Booking Modal */}
+      {editingBooking && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="bg-[#1c2128] border border-white/10 rounded-2xl w-full max-w-md p-6 shadow-2xl">
+            <h3 className="text-xl font-bold mb-4 flex items-center gap-2 text-emerald-400">
+              <span>✏️</span> Edit Inquiry Detail
+            </h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs font-medium text-white/40 mb-1 uppercase tracking-wider">Participant Name</label>
+                <input className={field} value={editingBooking.userName} 
+                  onChange={e => setEditingBooking({...editingBooking, userName: e.target.value})} />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-white/40 mb-1 uppercase tracking-wider">Phone number</label>
+                <input className={field} value={editingBooking.userPhone} 
+                  onChange={e => setEditingBooking({...editingBooking, userPhone: e.target.value})} />
+              </div>
+              <div className="flex gap-3 pt-2">
+                <button onClick={handleUpdateBooking} disabled={saving}
+                  className="flex-1 py-3 rounded-xl font-bold text-sm bg-gradient-to-r from-emerald-500 to-teal-600 hover:opacity-90 transition disabled:opacity-50 text-white">
+                  {saving ? "Saving..." : "Update Details"}
+                </button>
+                <button onClick={() => setEditingBooking(null)} disabled={saving}
+                  className="flex-1 py-3 rounded-xl font-bold text-sm bg-white/5 text-white/60 hover:bg-white/10 transition">
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

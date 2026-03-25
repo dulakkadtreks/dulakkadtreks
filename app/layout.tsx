@@ -8,8 +8,8 @@ const outfit = Outfit({
 });
 
 export const metadata: Metadata = {
-  title: "Dullakad Treks - Adventures",
-  description: "Book curated treks with Dullakad Treks. Explore upcoming and past trek experiences.",
+  title: "Dulakkad Treks - Adventures",
+  description: "Book curated treks with Dulakkad Treks. Explore upcoming and past trek experiences.",
 };
 
 export default function RootLayout({

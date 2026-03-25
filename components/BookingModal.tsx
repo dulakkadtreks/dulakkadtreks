@@ -133,7 +133,7 @@ export default function BookingModal({ isOpen, onClose, trek }: BookingModalProp
             )}
           </button>
           <p className="text-center text-[10px] text-white/30 hidden sm:block">
-            Your details will be safely sent to the Dullakad Treks admin team.
+            Your details will be safely sent to the Dulakkad Treks admin team.
           </p>
         </form>
       </div>
