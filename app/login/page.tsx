@@ -1,67 +1,138 @@
 "use client";
 
-import { useState } from "react";
-import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "@/lib/firebase";
+import { useState, useEffect } from "react";
+import { db, auth } from "@/lib/firebase";
+import { addDoc, collection } from "firebase/firestore";
+import { onAuthStateChanged, signOut } from "firebase/auth";
 
-// 🔐 CHANGE THIS
-const ADMIN_EMAIL = "admin@gmail.com";
-const ADMIN_PASSWORD = "123456";
+export default function Admin() {
+  const [loading, setLoading] = useState(true);
 
-export default function Login() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [show, setShow] = useState(false);
+  const [trek, setTrek] = useState({
+    name: "",
+    date: "",
+    location: "",
+    price: "",
+    status: "upcoming",
+    image: "",
+  });
 
-  const login = async () => {
-    // extra layer
-    if (email !== ADMIN_EMAIL || password !== ADMIN_PASSWORD) {
-      alert("Access Denied");
-      return;
-    }
+  // 🔐 Protect admin page (login required)
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        window.location.href = "/login";
+      } else {
+        setLoading(false);
+      }
+    });
 
+    return () => unsubscribe();
+  }, []);
+
+  // 🚪 Logout function
+  const logout = async () => {
+    await signOut(auth);
+    window.location.href = "/login";
+  };
+
+  // 💾 Save trek
+  const saveTrek = async () => {
     try {
-      await signInWithEmailAndPassword(auth, email, password);
-      window.location.href = "/admin";
-    } catch {
-      alert("Invalid credentials");
+      await addDoc(collection(db, "treks"), trek);
+
+      alert("Trek Added ✅");
+
+      // reset form
+      setTrek({
+        name: "",
+        date: "",
+        location: "",
+        price: "",
+        status: "upcoming",
+        image: "",
+      });
+    } catch (err) {
+      alert("Error saving trek");
+      console.log(err);
     }
   };
 
+  // ⏳ Loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p>Checking access...</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="bg-white p-6 rounded-xl shadow w-full max-w-sm">
-        <h1 className="text-xl font-bold mb-4 text-center">
-          Admin Login 🔐
-        </h1>
+    <div className="min-h-screen bg-gray-100 p-5">
+      <div className="max-w-md mx-auto bg-white p-5 rounded-xl shadow">
 
-        <input
-          className="border p-2 w-full mb-2 rounded"
-          placeholder="Email"
-          onChange={(e) => setEmail(e.target.value)}
-        />
-
-        <div className="relative">
-          <input
-            className="border p-2 w-full mb-3 rounded"
-            type={show ? "text" : "password"}
-            placeholder="Password"
-            onChange={(e) => setPassword(e.target.value)}
-          />
-
-          <span
-            className="absolute right-3 top-2 cursor-pointer text-sm"
-            onClick={() => setShow(!show)}
+        {/* Header */}
+        <div className="flex justify-between items-center mb-4">
+          <h1 className="text-xl font-bold">Admin Panel 🏔️</h1>
+          <button
+            onClick={logout}
+            className="text-red-500 text-sm"
           >
-            {show ? "Hide" : "Show"}
-          </span>
+            Logout
+          </button>
         </div>
 
-        <button
-          onClick={login}
-          className="bg-black text-white w-full p-2 rounded"
+        {/* Form */}
+        <input
+          placeholder="Trek Name"
+          className="border p-2 w-full mb-2 rounded"
+          value={trek.name}
+          onChange={(e) => setTrek({ ...trek, name: e.target.value })}
+        />
+
+        <input
+          type="date"
+          className="border p-2 w-full mb-2 rounded"
+          value={trek.date}
+          onChange={(e) => setTrek({ ...trek, date: e.target.value })}
+        />
+
+        <input
+          placeholder="Location"
+          className="border p-2 w-full mb-2 rounded"
+          value={trek.location}
+          onChange={(e) => setTrek({ ...trek, location: e.target.value })}
+        />
+
+        <input
+          placeholder="Price"
+          className="border p-2 w-full mb-2 rounded"
+          value={trek.price}
+          onChange={(e) => setTrek({ ...trek, price: e.target.value })}
+        />
+
+        <select
+          className="border p-2 w-full mb-2 rounded"
+          value={trek.status}
+          onChange={(e) => setTrek({ ...trek, status: e.target.value })}
         >
-          Login
+          <option value="upcoming">Upcoming</option>
+          <option value="completed">Completed</option>
+        </select>
+
+        <input
+          placeholder="Image URL (optional)"
+          className="border p-2 w-full mb-3 rounded"
+          value={trek.image}
+          onChange={(e) => setTrek({ ...trek, image: e.target.value })}
+        />
+
+        {/* Button */}
+        <button
+          onClick={saveTrek}
+          className="bg-green-600 text-white p-2 w-full rounded"
+        >
+          Save Trek
         </button>
       </div>
     </div>
