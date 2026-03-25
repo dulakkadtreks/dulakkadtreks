@@ -25,7 +25,7 @@ function toDirectUrl(url: string): string {
   return url;
 }
 
-/** Get all images for a trek (supports both old `image` and new `images[]`) */
+/** Get all images for a trek */
 function getTrekImages(t: Trek): string[] {
   if (t.images && t.images.length > 0) return t.images.map(toDirectUrl);
   if (t.image) return [toDirectUrl(t.image)];
@@ -48,50 +48,53 @@ function TrekImageCarousel({ images, name }: { images: string[]; name: string })
   if (images.length === 0) return null;
 
   return (
-    <div className="relative h-52 overflow-hidden group/carousel">
+    <div className="relative h-60 sm:h-64 overflow-hidden group/carousel">
       {/* Image */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={images[current]}
         alt={name}
-        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+        className="w-full h-full object-cover transition-transform duration-1000 group-hover/carousel:scale-110"
         referrerPolicy="no-referrer"
       />
 
-      {/* dark overlay */}
-      <div className="absolute inset-0"
-        style={{ background: "linear-gradient(to top,rgba(8,12,16,0.95) 0%,rgba(8,12,16,0.3) 50%,transparent 100%)" }} />
+      {/* dark overlay for text readability */}
+      <div className="absolute inset-0 bg-gradient-to-t from-[#06090f] via-transparent to-transparent opacity-90 mix-blend-multiply" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
 
       {/* Prev / Next arrows — only when multiple images */}
       {images.length > 1 && (
         <>
-          <button
+          <div
             onClick={prev}
-            className="absolute left-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-black/50 backdrop-blur-sm text-white text-xs flex items-center justify-center opacity-0 group-hover/carousel:opacity-100 transition hover:bg-black/70"
+            className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/10 backdrop-blur-md text-white flex items-center justify-center opacity-0 group-hover/carousel:opacity-100 transition-all duration-300 hover:bg-white/30 hover:scale-110 shadow-lg cursor-pointer"
+            aria-label="Previous image"
           >
-            ‹
-          </button>
-          <button
+            ←
+          </div>
+          <div
             onClick={next}
-            className="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-black/50 backdrop-blur-sm text-white text-xs flex items-center justify-center opacity-0 group-hover/carousel:opacity-100 transition hover:bg-black/70"
+            className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/10 backdrop-blur-md text-white flex items-center justify-center opacity-0 group-hover/carousel:opacity-100 transition-all duration-300 hover:bg-white/30 hover:scale-110 shadow-lg cursor-pointer"
+            aria-label="Next image"
           >
-            ›
-          </button>
+            →
+          </div>
 
           {/* dot indicators */}
-          <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-1">
+          <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-1.5 z-10">
             {images.map((_, i) => (
-              <button
+              <div
                 key={i}
                 onClick={(e) => { e.stopPropagation(); setCurrent(i); }}
-                className={`w-1.5 h-1.5 rounded-full transition-all ${i === current ? "bg-white w-4" : "bg-white/40"}`}
+                className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${i === current ? "bg-white w-6" : "bg-white/30 w-1.5 hover:bg-white/60"}`}
+                aria-label={`Go to slide ${i + 1}`}
               />
             ))}
           </div>
 
           {/* count badge */}
-          <span className="absolute top-3 left-3 bg-black/50 backdrop-blur-sm text-white/70 text-xs px-2 py-0.5 rounded-full border border-white/10">
-            {current + 1}/{images.length}
+          <span className="absolute top-4 right-4 bg-black/40 backdrop-blur-md text-white text-[10px] font-bold px-2.5 py-1 rounded-full border border-white/20 shadow-xl z-10">
+            {current + 1} / {images.length}
           </span>
         </>
       )}
@@ -106,10 +109,15 @@ export default function Home() {
 
   useEffect(() => {
     const fetchTreks = async () => {
-      const snapshot = await getDocs(collection(db, "treks"));
-      const data: Trek[] = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() } as Trek));
-      setTreks(data);
-      setLoading(false);
+      try {
+        const snapshot = await getDocs(collection(db, "treks"));
+        const data: Trek[] = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() } as Trek));
+        setTreks(data);
+      } catch (error) {
+        console.error("Error fetching treks:", error);
+      } finally {
+        setLoading(false);
+      }
     };
     fetchTreks();
   }, []);
@@ -118,70 +126,71 @@ export default function Home() {
   const completed = treks.filter((t) => t.status === "completed");
 
   return (
-    <div className="min-h-screen bg-[#080c10] text-white font-sans">
+    <div className="min-h-screen bg-[#06090f] text-slate-100 font-sans selection:bg-emerald-500/30">
 
-      {/* ── Fixed ambient blobs ─────────────────────── */}
+      {/* ── Ambient Background Glows ─────────────────────── */}
       <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
-        <div className="absolute -top-40 -left-40 w-[600px] h-[600px] rounded-full opacity-25 blur-3xl"
-          style={{ background: "radial-gradient(circle,#16a34a,transparent 70%)" }} />
-        <div className="absolute top-1/2 -right-40 w-[500px] h-[500px] rounded-full opacity-15 blur-3xl"
-          style={{ background: "radial-gradient(circle,#0891b2,transparent 70%)" }} />
-        <div className="absolute -bottom-40 left-1/3 w-[400px] h-[400px] rounded-full opacity-10 blur-3xl"
-          style={{ background: "radial-gradient(circle,#7c3aed,transparent 70%)" }} />
+        {/* Top left emerald glow */}
+        <div className="absolute -top-[20%] -left-[10%] w-[50vw] h-[50vw] rounded-full bg-emerald-600/10 blur-[120px]" />
+        {/* Center right cyan glow */}
+        <div className="absolute top-[30%] -right-[20%] w-[60vw] h-[60vw] rounded-full bg-cyan-600/10 blur-[140px]" />
+        {/* Bottom left violet glow */}
+        <div className="absolute -bottom-[20%] -left-[20%] w-[50vw] h-[50vw] rounded-full bg-violet-600/10 blur-[120px]" />
+        {/* Star dust overlay effect */}
+        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay"></div>
       </div>
 
       {/* ── Hero ────────────────────────────────────── */}
-      <header className="relative overflow-hidden">
-        <div className="max-w-3xl mx-auto px-5 pt-20 pb-16 text-center">
-          <span className="inline-flex items-center gap-2 bg-white/10 border border-white/15 text-xs font-medium px-4 py-1.5 rounded-full mb-7 backdrop-blur-sm tracking-wider uppercase">
-            <span className="text-base">🏔️</span>
-            Trekking Adventures
+      <header className="relative w-full overflow-hidden flex flex-col items-center justify-center pt-28 pb-20 px-4 min-h-[70vh]">
+        <div className="absolute top-0 w-full h-px bg-gradient-to-r from-transparent via-emerald-500/50 to-transparent"></div>
+        
+        <div className="max-w-4xl mx-auto text-center z-10 animate-fade-in-up">
+          <span className="inline-flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-xs font-semibold px-4 py-1.5 rounded-full mb-8 backdrop-blur-md shadow-[0_0_20px_rgba(16,185,129,0.1)]">
+            <span className="animate-pulse">✨</span>
+            Curated Wilderness Experiences
           </span>
 
-          <h1 className="text-5xl sm:text-6xl font-black leading-[1.1] tracking-tight">
-            Dullakad&nbsp;
-            <span className="relative inline-block">
-              <span className="bg-clip-text text-transparent"
-                style={{ backgroundImage: "linear-gradient(90deg,#4ade80 0%,#22d3ee 50%,#818cf8 100%)" }}>
+          <h1 className="text-6xl sm:text-7xl md:text-8xl font-black leading-[1.05] tracking-tighter text-white drop-shadow-2xl">
+            Dullakad<br className="sm:hidden" />
+            <span className="relative inline-block ml-0 sm:ml-4">
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400">
                 Treks
               </span>
-              <span className="absolute -bottom-1 left-0 w-full h-0.5 rounded-full"
-                style={{ background: "linear-gradient(90deg,#4ade80,#22d3ee,#818cf8)" }} />
+              <span className="absolute -bottom-2 sm:-bottom-4 left-0 w-full h-1 sm:h-2 rounded-full bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400 blur-[2px] opacity-70" />
             </span>
           </h1>
 
-          <p className="mt-5 text-white/50 text-base sm:text-lg max-w-md mx-auto leading-relaxed">
-            Discover breathtaking trails, curated adventures &amp;&nbsp;unforgettable memories in&nbsp;the mountains.
+          <p className="mt-8 text-slate-300/80 text-lg sm:text-xl md:text-2xl max-w-2xl mx-auto leading-relaxed font-light">
+            Escape the ordinary. Discover breathtaking trails, curated adventures, &amp; unforgettable memories in the mountains.
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-3 justify-center mt-9">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center mt-12 items-center">
             <a href="#upcoming"
-              className="inline-flex items-center justify-center gap-2 px-8 py-3 rounded-full font-bold text-sm text-white shadow-2xl transition-all duration-200 hover:scale-105 active:scale-95"
-              style={{ background: "linear-gradient(135deg,#16a34a,#0891b2)" }}>
-              Explore Upcoming Treks ↓
+              className="group relative inline-flex items-center justify-center gap-3 px-8 py-4 rounded-full font-bold text-base text-white overflow-hidden transition-all duration-300 hover:scale-105 active:scale-95 hover:shadow-[0_0_40px_rgba(16,185,129,0.4)]">
+              <span className="absolute inset-0 w-full h-full bg-gradient-to-br from-emerald-400 to-teal-600 group-hover:from-emerald-300 group-hover:to-teal-500 transition-colors"></span>
+              <span className="relative flex items-center gap-2">Explore Upcoming Treks <span className="group-hover:translate-y-1 transition-transform">↓</span></span>
             </a>
             {completed.length > 0 && (
               <a href="#completed"
-                className="inline-flex items-center justify-center gap-2 px-8 py-3 rounded-full font-bold text-sm text-white/60 border border-white/15 hover:bg-white/5 transition-all duration-200">
-                Past Treks
+                className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-full font-bold text-base text-slate-300 border border-slate-700/50 bg-slate-800/20 backdrop-blur-sm hover:bg-slate-700/40 hover:text-white transition-all duration-300 hover:shadow-lg">
+                View Past Treks
               </a>
             )}
           </div>
 
           {/* stats row */}
           {!loading && (
-            <div className="mt-12 flex justify-center gap-8 sm:gap-14 text-center">
+            <div className="mt-16 flex justify-center gap-8 sm:gap-16 text-center animate-fade-in delay-200">
               {[
                 { value: upcoming.length, label: "Upcoming" },
                 { value: completed.length, label: "Completed" },
                 { value: treks.length, label: "Total Treks" },
               ].map(({ value, label }) => (
-                <div key={label}>
-                  <p className="text-3xl font-black bg-clip-text text-transparent"
-                    style={{ backgroundImage: "linear-gradient(135deg,#4ade80,#22d3ee)" }}>
+                <div key={label} className="flex flex-col items-center">
+                  <p className="text-4xl sm:text-5xl font-black bg-clip-text text-transparent bg-gradient-to-b from-white to-slate-400">
                     {value}
                   </p>
-                  <p className="text-xs text-white/40 mt-0.5 tracking-wide uppercase">{label}</p>
+                  <p className="text-xs sm:text-sm text-emerald-400/80 mt-1 font-semibold tracking-widest uppercase">{label}</p>
                 </div>
               ))}
             </div>
@@ -189,77 +198,96 @@ export default function Home() {
         </div>
       </header>
 
-      <main className="max-w-3xl mx-auto px-4 pb-20">
+      <main className="max-w-5xl mx-auto px-4 sm:px-6 pb-24 z-10 relative">
 
         {/* ── Upcoming Treks ───────────────────────────── */}
-        <section id="upcoming" className="scroll-mt-10">
-          <div className="flex items-center gap-3 mb-6 mt-4">
-            <span className="w-2.5 h-2.5 rounded-full bg-green-400 shadow-[0_0_10px_3px_#4ade80]" />
-            <h2 className="text-2xl font-extrabold tracking-wide">Upcoming Treks</h2>
+        <section id="upcoming" className="scroll-mt-24">
+          <div className="flex items-center gap-4 mb-10">
+            <div className="relative flex h-4 w-4">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-4 w-4 bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.8)]"></span>
+            </div>
+            <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white">Featured Upcoming Treks</h2>
           </div>
 
           {loading && (
-            <div className="grid sm:grid-cols-2 gap-5">
+            <div className="grid md:grid-cols-2 gap-8">
               {[1, 2].map((n) => (
-                <div key={n} className="h-72 rounded-2xl bg-white/5 animate-pulse" />
+                <div key={n} className="h-96 rounded-3xl bg-slate-800/30 animate-pulse border border-slate-700/50" />
               ))}
             </div>
           )}
 
           {!loading && upcoming.length === 0 && (
-            <div className="text-center py-16 text-white/30">
-              <p className="text-4xl mb-3">🏞️</p>
-              <p>No upcoming treks scheduled right now.</p>
+            <div className="text-center py-20 px-6 rounded-3xl bg-slate-800/20 border border-slate-700/30 backdrop-blur-xl">
+              <div className="w-20 h-20 bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-6 text-4xl shadow-inner">
+                🏞️
+              </div>
+              <h3 className="text-xl font-bold text-white mb-2">No upcomings scheduled!</h3>
+              <p className="text-slate-400">We're planning new adventures. Check back soon for more thrilling treks.</p>
             </div>
           )}
 
-          <div className="grid sm:grid-cols-2 gap-5">
+          <div className="grid md:grid-cols-2 gap-8">
             {upcoming.map((t, i) => {
               const imgs = getTrekImages(t);
               return (
-                <Link href={`/trek/${t.id}`} key={t.id || i}
-                  className="group relative rounded-2xl block overflow-hidden border border-white/10 bg-white/5 backdrop-blur-md transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_20px_60px_rgba(0,0,0,0.5)] hover:border-green-400/30">
-
-                  {imgs.length > 0 ? (
-                    <>
-                      <TrekImageCarousel images={imgs} name={t.name} />
-                      {/* price badge on image */}
-                      <span className="absolute top-3 right-3 bg-green-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg z-10">
-                        ₹{t.price}
-                      </span>
-                      {/* status badge */}
-                      <span className="absolute top-3 left-3 flex items-center gap-1.5 bg-black/40 backdrop-blur-sm text-white/80 text-xs px-2.5 py-1 rounded-full border border-white/10 z-10">
-                        <span className="w-1.5 h-1.5 rounded-full bg-green-400 shadow-[0_0_4px_1px_#4ade80]" />
+                <div key={t.id || i}
+                  className="group flex flex-col relative rounded-[2rem] overflow-hidden bg-slate-900/40 border border-slate-700/50 backdrop-blur-xl transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_20px_60px_-15px_rgba(16,185,129,0.3)] hover:border-emerald-500/50 hover:bg-slate-800/60 z-10 flex-1">
+                  
+                  <Link href={`/trek/${t.id}`} className="relative block flex-grow">
+                    <div className="relative">
+                      {imgs.length > 0 ? (
+                        <TrekImageCarousel images={imgs} name={t.name} />
+                      ) : (
+                        <div className="h-60 sm:h-64 bg-gradient-to-br from-emerald-900/40 to-teal-900/40 flex items-center justify-center">
+                          <span className="text-5xl drop-shadow-lg opacity-80">🏔️</span>
+                        </div>
+                      )}
+                      
+                      {/* Status badge */}
+                      <span className="absolute top-4 left-4 flex items-center gap-2 bg-[#06090f]/80 backdrop-blur-md text-emerald-300 text-xs font-bold uppercase tracking-wider px-3 py-1.5 rounded-full border border-emerald-500/30 shadow-lg z-10">
+                        <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,1)]" />
                         Upcoming
                       </span>
-                    </>
-                  ) : (
-                    <div className="h-24 bg-gradient-to-r from-green-900/40 to-cyan-900/40 flex items-center justify-center text-3xl">
-                      🏔️
                     </div>
-                  )}
 
-                  <div className="p-5">
-                    <h3 className="text-lg font-bold leading-tight">{t.name}</h3>
-                    <div className="flex flex-wrap gap-x-4 gap-y-1.5 mt-2.5 text-sm text-white/50">
-                      <span className="flex items-center gap-1.5"><span>📅</span>{t.date}</span>
-                      <span className="flex items-center gap-1.5"><span>📍</span>{t.location}</span>
+                    <div className="p-6 sm:p-8 flex flex-col">
+                      <div className="flex justify-between items-start gap-4 mb-4">
+                        <h3 className="text-2xl font-bold leading-tight text-white group-hover:text-emerald-300 transition-colors line-clamp-2">{t.name}</h3>
+                        <div className="shrink-0 bg-emerald-500/10 text-emerald-400 font-bold px-3 py-1.5 rounded-xl border border-emerald-500/20">
+                          ₹{t.price}
+                        </div>
+                      </div>
+                      
+                      <div className="flex flex-col gap-3 text-sm text-slate-300">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full bg-teal-500/10 flex items-center justify-center text-teal-400 shrink-0">📅</div>
+                          <span className="font-medium text-slate-200">{t.date}</span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full bg-violet-500/10 flex items-center justify-center text-violet-400 shrink-0">📍</div>
+                          <span className="font-medium text-slate-200 line-clamp-1">{t.location}</span>
+                        </div>
+                      </div>
                     </div>
-                    {imgs.length === 0 && (
-                      <p className="mt-2 text-green-400 font-bold">₹{t.price}</p>
-                    )}
-                    <a
-                      href={`https://wa.me/91XXXXXXXXXX?text=Hi I want to join ${encodeURIComponent(t.name)}`}
-                      target="_blank" rel="noopener noreferrer"
-                      className="mt-4 flex items-center justify-center gap-2 w-full py-2.5 rounded-xl font-semibold text-sm transition-all duration-200 hover:brightness-110 active:scale-95"
-                      style={{ background: "linear-gradient(135deg,#16a34a,#15803d)" }}>
-                      <svg className="w-4 h-4" viewBox="0 0 32 32" fill="currentColor">
-                        <path d="M16 2C8.27 2 2 8.27 2 16c0 2.44.66 4.82 1.9 6.9L2 30l7.35-1.87A13.9 13.9 0 0016 30c7.73 0 14-6.27 14-14S23.73 2 16 2zm0 25.2a11.17 11.17 0 01-5.7-1.56l-.41-.24-4.36 1.11 1.14-4.25-.27-.44A11.2 11.2 0 1116 27.2zm6.14-8.35c-.34-.17-2-.98-2.3-1.09-.31-.11-.54-.17-.77.17-.22.34-.87 1.09-1.07 1.32-.2.22-.39.25-.73.08-.34-.17-1.44-.53-2.74-1.69a10.3 10.3 0 01-1.9-2.36c-.2-.34-.02-.52.15-.69l.5-.57c.16-.19.21-.34.32-.56.1-.22.05-.42-.03-.59-.08-.17-.77-1.86-1.06-2.55-.28-.67-.57-.58-.77-.59H9.7c-.22 0-.59.08-.9.42C8.48 10.64 7.6 11.5 7.6 13.2s1.16 3.36 1.32 3.6c.17.22 2.28 3.49 5.53 4.9.77.33 1.37.53 1.84.68.77.24 1.47.21 2.02.13.62-.09 1.9-.78 2.17-1.53.27-.75.27-1.4.19-1.53-.08-.14-.3-.22-.64-.38z" />
-                      </svg>
-                      Book via WhatsApp
-                    </a>
+                  </Link>
+
+                  <div className="px-6 sm:px-8 pb-6 sm:pb-8 pt-0 mt-auto">
+                    <div className="pt-6 border-t border-slate-700/50">
+                      <a
+                        href={`https://wa.me/91XXXXXXXXXX?text=Hi I want to join ${encodeURIComponent(t.name)}`}
+                        target="_blank" rel="noopener noreferrer"
+                        className="relative overflow-hidden group/btn flex items-center justify-center gap-2.5 w-full py-4 rounded-xl font-bold text-sm text-white transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-[0_0_20px_rgba(37,211,102,0.4)] bg-[#25D366]">
+                        <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover/btn:animate-[shimmer_1.5s_infinite]"></div>
+                        <svg className="w-5 h-5 drop-shadow-sm" viewBox="0 0 32 32" fill="currentColor">
+                          <path d="M16 2C8.27 2 2 8.27 2 16c0 2.44.66 4.82 1.9 6.9L2 30l7.35-1.87A13.9 13.9 0 0016 30c7.73 0 14-6.27 14-14S23.73 2 16 2zm0 25.2a11.17 11.17 0 01-5.7-1.56l-.41-.24-4.36 1.11 1.14-4.25-.27-.44A11.2 11.2 0 1116 27.2zm6.14-8.35c-.34-.17-2-.98-2.3-1.09-.31-.11-.54-.17-.77.17-.22.34-.87 1.09-1.07 1.32-.2.22-.39.25-.73.08-.34-.17-1.44-.53-2.74-1.69a10.3 10.3 0 01-1.9-2.36c-.2-.34-.02-.52.15-.69l.5-.57c.16-.19.21-.34.32-.56.1-.22.05-.42-.03-.59-.08-.17-.77-1.86-1.06-2.55-.28-.67-.57-.58-.77-.59H9.7c-.22 0-.59.08-.9.42C8.48 10.64 7.6 11.5 7.6 13.2s1.16 3.36 1.32 3.6c.17.22 2.28 3.49 5.53 4.9.77.33 1.37.53 1.84.68.77.24 1.47.21 2.02.13.62-.09 1.9-.78 2.17-1.53.27-.75.27-1.4.19-1.53-.08-.14-.3-.22-.64-.38z" />
+                        </svg>
+                        Book via WhatsApp
+                      </a>
+                    </div>
                   </div>
-                </Link>
+                </div>
               );
             })}
           </div>
@@ -267,37 +295,55 @@ export default function Home() {
 
         {/* ── Previous Treks ───────────────────────────── */}
         {completed.length > 0 && (
-          <section id="completed" className="mt-16 scroll-mt-10">
-            <div className="flex items-center gap-3 mb-6">
-              <span className="w-2.5 h-2.5 rounded-full bg-white/25" />
-              <h2 className="text-2xl font-extrabold tracking-wide text-white/60">Previous Treks</h2>
+          <section id="completed" className="mt-24 scroll-mt-24">
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-10 pb-4 border-b border-slate-800">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-slate-800/50 rounded-lg border border-slate-700/50">
+                  <span className="text-xl">📸</span>
+                </div>
+                <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-200">Wall of Memories</h2>
+              </div>
+              <p className="text-slate-400 text-sm font-medium">Past Expeditions</p>
             </div>
 
-            <div className="grid sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {completed.map((t, i) => {
                 const imgs = getTrekImages(t);
                 return (
                   <Link href={`/trek/${t.id}`} key={t.id || i}
-                    className="relative block rounded-2xl overflow-hidden border border-white/8 bg-white/4 hover:bg-white/8 transition-all duration-200 group">
-                    {imgs.length > 0 && (
-                      <div className="h-32 overflow-hidden">
+                    className="group relative flex flex-col rounded-2xl overflow-hidden border border-slate-800 bg-slate-900/50 hover:bg-slate-800/80 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:border-slate-600">
+                    {imgs.length > 0 ? (
+                      <div className="h-40 overflow-hidden relative">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img src={imgs[0]} alt={t.name}
-                          className="w-full h-full object-cover opacity-40 group-hover:opacity-55 transition-opacity duration-300"
+                          className="w-full h-full object-cover opacity-60 group-hover:opacity-90 group-hover:scale-105 transition-all duration-700"
                           referrerPolicy="no-referrer" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent"></div>
+                      </div>
+                    ) : (
+                      <div className="h-40 bg-slate-800/50 flex items-center justify-center opacity-50 relative">
+                        <span className="text-4xl filter grayscale">🏔️</span>
+                        <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent"></div>
                       </div>
                     )}
-                    <div className="p-4 flex items-center justify-between gap-3">
-                      <div>
-                        <h3 className="font-semibold text-white/70 text-sm">{t.name}</h3>
-                        <p className="text-xs text-white/35 mt-0.5">{t.date} · {t.location}</p>
-                        {imgs.length > 1 && (
-                          <p className="text-xs text-white/25 mt-0.5">{imgs.length} photos</p>
-                        )}
+                    <div className="p-5 flex-grow flex flex-col justify-center relative z-10 -mt-8 bg-gradient-to-b from-transparent to-slate-900 via-slate-900/90">
+                      <div className="flex justify-between items-start mb-1">
+                        <h3 className="font-bold text-white text-lg line-clamp-1 pr-2 group-hover:text-emerald-300 transition-colors">{t.name}</h3>
+                        <span className="shrink-0 bg-slate-800/80 backdrop-blur-sm text-slate-400 text-[10px] uppercase font-bold px-2 py-1 rounded-md border border-slate-700/50 shadow-sm mt-1">
+                          Completed
+                        </span>
                       </div>
-                      <span className="shrink-0 text-xs font-medium bg-white/8 text-white/40 px-3 py-1 rounded-full border border-white/10">
-                        Done ✓
-                      </span>
+                      <p className="text-sm text-slate-400 font-medium">
+                        {t.date} <span className="mx-1 text-slate-600">•</span> {t.location}
+                      </p>
+                      {imgs.length > 1 && (
+                        <div className="mt-4 flex items-center gap-1.5 text-xs font-semibold text-emerald-400/80">
+                          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                          {imgs.length} Photos Gallery
+                        </div>
+                      )}
                     </div>
                   </Link>
                 );
@@ -308,8 +354,21 @@ export default function Home() {
       </main>
 
       {/* ── Footer ──────────────────────────────────── */}
-      <footer className="border-t border-white/5 py-8 text-center text-white/25 text-xs tracking-wide">
-        © {new Date().getFullYear()} Dullakad Treks · All rights reserved
+      <footer className="relative border-t border-slate-800/60 bg-slate-900/30 overflow-hidden">
+        <div className="absolute top-0 w-full h-px bg-gradient-to-r from-transparent via-emerald-500/20 to-transparent"></div>
+        <div className="max-w-5xl mx-auto px-6 py-10 flex flex-col md:flex-row justify-between items-center gap-6">
+          <div className="flex items-center gap-3">
+             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-400 to-cyan-500 flex items-center justify-center shadow-[0_0_10px_rgba(16,185,129,0.3)]">
+               <span className="text-white font-bold text-sm">D</span>
+             </div>
+             <span className="font-bold text-slate-200 tracking-wide text-lg">Dullakad Treks</span>
+          </div>
+          <div className="text-center md:text-right">
+            <p className="text-slate-400 text-sm font-medium">
+              © {new Date().getFullYear()} Dullakad Treks. Curating adventures and redefining wilderness.
+            </p>
+          </div>
+        </div>
       </footer>
     </div>
   );

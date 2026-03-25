@@ -197,7 +197,7 @@ export default function Admin() {
               <option value="completed">Completed</option>
             </select>
 
-            <div className="mb-4">
+            <div className="mb-6">
               <p className="text-xs text-white/50 mb-2">🖼️ Google Drive Image Links</p>
               {imageInputs.map((url, i) => (
                 <div key={i} className="mb-2">
@@ -227,14 +227,14 @@ export default function Admin() {
 
             <div className="flex flex-col gap-2">
               <button onClick={saveTrek} disabled={saving}
-                className="w-full py-3 rounded-xl font-bold text-sm transition-all duration-200 hover:opacity-90 active:scale-95 disabled:opacity-50"
+                className="w-full py-3 flex items-center justify-center gap-2 rounded-xl font-bold text-sm transition-all duration-200 hover:opacity-90 active:scale-95 disabled:opacity-50"
                 style={editingId ? { background: "linear-gradient(135deg,#f59e0b,#d97706)" } : { background: "linear-gradient(135deg,#16a34a,#0891b2)" }}>
                 {saving ? "Saving…" : editingId ? "Save Changes 💾" : "Save Trek ✅"}
               </button>
               
               {editingId && (
-                <button onClick={resetForm}
-                  className="w-full py-3 rounded-xl font-bold text-sm bg-white/5 text-white/60 hover:bg-white/10 hover:text-white transition">
+                <button onClick={resetForm} disabled={saving}
+                  className="w-full py-3 rounded-xl font-bold text-sm bg-white/5 text-white/60 hover:bg-white/10 hover:text-white transition disabled:opacity-50">
                   Cancel Edit
                 </button>
               )}
@@ -282,13 +282,13 @@ export default function Admin() {
                     </div>
 
                     <div className="flex items-center gap-2 shrink-0">
-                      <button onClick={() => handleEdit(t)}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${isEditingThis ? "bg-amber-500 text-white" : "bg-white/10 text-white/70 hover:bg-white/20 hover:text-white"}`}>
+                      <button onClick={() => handleEdit(t)} disabled={saving}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${isEditingThis ? "bg-amber-500 text-white" : "bg-white/10 text-white/70 hover:bg-white/20 hover:text-white"} disabled:opacity-50`}>
                         {isEditingThis ? "Editing.." : "Edit"}
                       </button>
                       
-                      <button onClick={() => handleDelete(t.id!, t.name)}
-                        className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-red-500/10 text-red-400 hover:bg-red-500/20 transition">
+                      <button onClick={() => handleDelete(t.id!, t.name)} disabled={saving}
+                        className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-red-500/10 text-red-400 hover:bg-red-500/20 transition disabled:opacity-50">
                         Delete
                       </button>
                     </div>
