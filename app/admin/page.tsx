@@ -15,6 +15,7 @@ type Trek = {
   status: string;
   image?: string;
   images?: string[];
+  description?: string;
 };
 
 /** Convert any Google Drive share link to a direct-embeddable URL */
@@ -33,7 +34,7 @@ function getTrekImages(t: Trek): string[] {
   return [];
 }
 
-const emptyTrek = { name: "", date: "", location: "", leader: "", price: "", status: "upcoming" };
+const emptyTrek = { name: "", date: "", location: "", leader: "", price: "", status: "upcoming", description: "" };
 
 export default function Admin() {
   const [trek, setTrek] = useState<Trek>(emptyTrek);
@@ -44,6 +45,40 @@ export default function Admin() {
 
   const [saving, setSaving] = useState(false);
   const [loadingTreks, setLoadingTreks] = useState(true);
+  const [generating, setGenerating] = useState(false);
+
+  // ✨ AI Description Generation
+  const generateDescription = async () => {
+    if (!trek.name || !trek.location || !trek.price) {
+      alert("Please fill in Name, Location, and Price first before generating.");
+      return;
+    }
+    setGenerating(true);
+    try {
+      const res = await fetch("/api/generate-description", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: trek.name,
+          location: trek.location,
+          price: trek.price,
+          leader: trek.leader,
+          status: trek.status,
+          currentDescription: trek.description
+        })
+      });
+      const data = await res.json();
+      if (res.ok && data.description) {
+        setTrek(prev => ({ ...prev, description: data.description }));
+      } else {
+        alert("Error generating description: " + (data.error || "Unknown error"));
+      }
+    } catch (err) {
+      alert("Failed to connect to API.");
+    } finally {
+      setGenerating(false);
+    }
+  };
 
   // 🔐 Protect admin
   useEffect(() => {
@@ -114,6 +149,7 @@ export default function Admin() {
       leader: t.leader || "",
       price: t.price,
       status: t.status,
+      description: t.description || "",
     });
     
     // load images into inputs
@@ -196,6 +232,24 @@ export default function Admin() {
               <option value="upcoming">Upcoming</option>
               <option value="completed">Completed</option>
             </select>
+
+            <div className="mb-3 relative group">
+              <textarea
+                className={`${field} min-h-[100px] resize-y mb-0`}
+                placeholder="Trek Description (Write yourself or auto-generate with AI)"
+                value={trek.description || ""}
+                onChange={(e) => setTrek({ ...trek, description: e.target.value })}
+              />
+              <button
+                type="button"
+                onClick={generateDescription}
+                disabled={generating}
+                className="absolute right-2 top-2 p-1.5 bg-green-500/20 text-green-400 hover:bg-green-500/30 rounded-lg text-xs font-bold transition disabled:opacity-50 flex items-center gap-1 backdrop-blur-md border border-green-500/30"
+                title="Auto-generate or rewrite using AI"
+              >
+                ✨ {generating ? "Generating..." : "AI Writing"}
+              </button>
+            </div>
 
             <div className="mb-6">
               <p className="text-xs text-white/50 mb-2">🖼️ Google Drive Image Links</p>
