@@ -61,6 +61,17 @@ export default function Admin() {
   const [bookingsList, setBookingsList] = useState<Booking[]>([]);
   const [loadingBookings, setLoadingBookings] = useState(true);
   const [editingBooking, setEditingBooking] = useState<Booking | null>(null);
+  const [toast, setToast] = useState<{ msg: string; type: "success" | "error" } | null>(null);
+
+  const showToast = (msg: string, type: "success" | "error" = "success") => {
+    setToast({ msg, type });
+    setTimeout(() => setToast(null), 3000);
+  };
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    showToast("Phone number copied! 📋");
+  };
 
   // ✨ AI Description Generation
   const generateDescription = async () => {
@@ -86,10 +97,10 @@ export default function Admin() {
       if (res.ok && data.description) {
         setTrek(prev => ({ ...prev, description: data.description }));
       } else {
-        alert("Error generating description: " + (data.error || "Unknown error"));
+        showToast("Error generating description: " + (data.error || "Unknown error"), "error");
       }
     } catch (err) {
-      alert("Failed to connect to API.");
+      showToast("Failed to connect to API.", "error");
     } finally {
       setGenerating(false);
     }
@@ -143,11 +154,11 @@ export default function Admin() {
     if (editingId) {
       // Update existing
       await updateDoc(doc(db, "treks", editingId), trekData);
-      alert("Trek Updated ✅");
+      showToast("Trek Updated ✅");
     } else {
       // Create new
       await addDoc(collection(db, "treks"), trekData);
-      alert("Trek Added ✅");
+      showToast("Trek Added ✅");
     }
 
     setSaving(false);
@@ -208,9 +219,9 @@ export default function Admin() {
     try {
       await deleteDoc(doc(db, "bookings", id));
       setBookingsList(prev => prev.filter(b => b.id !== id));
-      alert("Inquiry Deleted ✅");
+      showToast("Inquiry Deleted ✅");
     } catch (err) {
-      alert("Failed to delete inquiry");
+      showToast("Failed to delete inquiry", "error");
     }
     setSaving(false);
   };
@@ -223,9 +234,9 @@ export default function Admin() {
       await updateDoc(doc(db, "bookings", id), data);
       setBookingsList(prev => prev.map(b => b.id === id ? editingBooking : b));
       setEditingBooking(null);
-      alert("Inquiry Updated ✅");
+      showToast("Inquiry Updated ✅");
     } catch (err) {
-      alert("Failed to update inquiry");
+      showToast("Failed to update inquiry", "error");
     }
     setSaving(false);
   };
@@ -480,7 +491,18 @@ export default function Admin() {
                                   {b.userName}
                                 </td>
                                 <td className="px-6 py-4">
-                                  <span className="text-white/60 font-medium tabular-nums">{b.userPhone}</span>
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-white/60 font-medium tabular-nums">{b.userPhone}</span>
+                                    <button 
+                                      onClick={() => copyToClipboard(b.userPhone)}
+                                      className="p-1.5 rounded-md hover:bg-white/10 text-white/30 hover:text-emerald-400 transition-colors"
+                                      title="Copy Number"
+                                    >
+                                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                      </svg>
+                                    </button>
+                                  </div>
                                 </td>
                                 <td className="px-6 py-4 text-white/30 text-xs">
                                   {new Date(b.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
@@ -551,6 +573,14 @@ export default function Admin() {
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* 🔔 Toast Notification */}
+      {toast && (
+        <div className={`fixed bottom-8 left-1/2 -translate-x-1/2 z-[200] px-6 py-3 rounded-2xl shadow-2xl backdrop-blur-xl border border-white/10 flex items-center gap-3 animate-fade-in-up ${toast.type === "error" ? "bg-red-500/20 text-red-400 border-red-500/20" : "bg-emerald-500/20 text-emerald-400 border-emerald-500/20"}`}>
+          <div className={`w-2 h-2 rounded-full animate-pulse ${toast.type === "error" ? "bg-red-400" : "bg-emerald-400"}`} />
+          <span className="font-bold text-sm">{toast.msg}</span>
         </div>
       )}
     </div>

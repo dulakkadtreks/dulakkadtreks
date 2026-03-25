@@ -170,17 +170,17 @@ export default function Home() {
             Curated Wilderness Experiences
           </span>
 
-          <h1 className="text-6xl sm:text-7xl md:text-8xl font-black leading-[1.05] tracking-tighter text-white drop-shadow-2xl">
+          <h1 className="text-6xl sm:text-7xl md:text-8xl font-black leading-[1.05] tracking-tighter text-white drop-shadow-2xl animate-fade-in-up">
             Dulakkad<br className="sm:hidden" />
-            <span className="relative inline-block ml-0 sm:ml-4">
+            <span className="relative inline-block ml-0 sm:ml-4 group">
               <span className="bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400">
                 Treks
               </span>
-              <span className="absolute -bottom-2 sm:-bottom-4 left-0 w-full h-1 sm:h-2 rounded-full bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400 blur-[2px] opacity-70" />
+              <span className="absolute -bottom-2 sm:-bottom-4 left-0 w-full h-1 sm:h-2 rounded-full bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400 blur-[2px] opacity-70 group-hover:opacity-100 transition-opacity" />
             </span>
           </h1>
 
-          <p className="mt-8 text-slate-300/80 text-lg sm:text-xl md:text-2xl max-w-2xl mx-auto leading-relaxed font-light">
+          <p className="mt-8 text-slate-300/80 text-lg sm:text-xl md:text-2xl max-w-2xl mx-auto leading-relaxed font-light animate-fade-in-up delay-100">
             Escape the ordinary. Discover breathtaking trails, curated adventures, &amp; unforgettable memories in the mountains.
           </p>
 
@@ -200,14 +200,14 @@ export default function Home() {
 
           {/* stats row */}
           {!loading && (
-            <div className="mt-16 flex justify-center gap-8 sm:gap-16 text-center animate-fade-in delay-200">
+            <div className="mt-16 flex justify-center gap-8 sm:gap-16 text-center animate-fade-in-up delay-300">
               {[
                 { value: upcoming.length, label: "Upcoming" },
                 { value: completed.length, label: "Completed" },
                 { value: treks.length, label: "Total Treks" },
               ].map(({ value, label }) => (
-                <div key={label} className="flex flex-col items-center">
-                  <p className="text-4xl sm:text-5xl font-black bg-clip-text text-transparent bg-gradient-to-b from-white to-slate-400">
+                <div key={label} className="flex flex-col items-center group/stat">
+                  <p className="text-4xl sm:text-5xl font-black bg-clip-text text-transparent bg-gradient-to-b from-white to-slate-400 group-hover/stat:scale-110 transition-transform">
                     {value}
                   </p>
                   <p className="text-xs sm:text-sm text-emerald-400/80 mt-1 font-semibold tracking-widest uppercase">{label}</p>
@@ -253,15 +253,17 @@ export default function Home() {
               const imgs = getTrekImages(t);
               return (
                 <div key={t.id || i}
-                  className="group flex flex-col relative rounded-[2rem] overflow-hidden bg-slate-900/40 border border-slate-700/50 backdrop-blur-xl transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_20px_60px_-15px_rgba(16,185,129,0.3)] hover:border-emerald-500/50 hover:bg-slate-800/60 z-10 flex-1">
+                  className="group flex flex-col relative rounded-[2rem] overflow-hidden bg-slate-900/40 border border-slate-700/50 backdrop-blur-xl transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_20px_60px_-15px_rgba(16,185,129,0.3)] hover:border-emerald-500/50 hover:bg-slate-800/60 z-10 flex-1 animate-fade-in-up"
+                  style={{ animationDelay: `${(i + 1) * 150}ms` }}
+                >
                   
                   <Link href={`/trek/${t.id}`} className="relative block flex-grow">
                     <div className="relative">
                       {imgs.length > 0 ? (
                         <TrekImageCarousel images={imgs} name={t.name} />
                       ) : (
-                        <div className="h-60 sm:h-64 bg-gradient-to-br from-emerald-900/40 to-teal-900/40 flex items-center justify-center">
-                          <span className="text-5xl drop-shadow-lg opacity-80">🏔️</span>
+                        <div className="h-60 sm:h-64 bg-gradient-to-br from-emerald-900/40 to-teal-900/40 flex items-center justify-center overflow-hidden">
+                          <span className="text-5xl drop-shadow-lg opacity-80 group-hover:scale-125 transition-transform duration-700">🏔️</span>
                         </div>
                       )}
                       

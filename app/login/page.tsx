@@ -78,6 +78,15 @@ export default function Login() {
             {loading ? "Logging in..." : "Login to Dashboard"}
           </button>
         </form>
+        
+        <div className="mt-8 pt-6 border-t border-white/5 text-center">
+          <p className="text-xs text-white/30">
+            Forgot password or need access? <br />
+            <a href="https://wa.me/919928900857" target="_blank" rel="noopener noreferrer" className="text-emerald-400 hover:text-emerald-300 font-medium transition-colors">
+              Contact Dulakkad Support
+            </a>
+          </p>
+        </div>
       </div>
     </div>
   );
