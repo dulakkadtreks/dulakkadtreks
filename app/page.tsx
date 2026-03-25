@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { db } from "@/lib/firebase";
 import { collection, getDocs } from "firebase/firestore";
+import BookingModal from "@/components/BookingModal";
 
 type Trek = {
   id?: string;
@@ -30,7 +31,7 @@ function toDirectUrl(url: string): string {
 function getTrekImages(t: Trek): string[] {
   if (t.images && t.images.length > 0) return t.images.map(toDirectUrl);
   if (t.image) return [toDirectUrl(t.image)];
-  return [];
+  return ["/images/bg1.png"]; // Default mountain image fallback
 }
 
 /* ── Image Carousel component ─────────────────────── */
@@ -107,6 +108,7 @@ function TrekImageCarousel({ images, name }: { images: string[]; name: string })
 export default function Home() {
   const [treks, setTreks] = useState<Trek[]>([]);
   const [loading, setLoading] = useState(true);
+  const [bookingTrek, setBookingTrek] = useState<Trek | null>(null);
 
   useEffect(() => {
     const fetchTreks = async () => {
@@ -130,7 +132,8 @@ export default function Home() {
     <div className="min-h-screen bg-[#06090f] text-slate-100 font-sans selection:bg-emerald-500/30">
 
       {/* ── Ambient Background Glows ─────────────────────── */}
-      <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
+      <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
+        <div className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-40 mix-blend-luminosity" style={{ backgroundImage: "url('/images/bg1.png')" }}></div>
         {/* Top left emerald glow */}
         <div className="absolute -top-[20%] -left-[10%] w-[50vw] h-[50vw] rounded-full bg-emerald-600/10 blur-[120px]" />
         {/* Center right cyan glow */}
@@ -144,6 +147,22 @@ export default function Home() {
       {/* ── Hero ────────────────────────────────────── */}
       <header className="relative w-full overflow-hidden flex flex-col items-center justify-center pt-28 pb-20 px-4 min-h-[70vh]">
         <div className="absolute top-0 w-full h-px bg-gradient-to-r from-transparent via-emerald-500/50 to-transparent"></div>
+
+        {/* ── Social Media Nav ──────────────────────── */}
+        <div className="absolute top-6 left-0 w-full flex justify-center gap-4 z-50">
+          <a href="https://www.instagram.com/dulak_kad/" target="_blank" rel="noopener noreferrer" 
+             className="w-11 h-11 rounded-full bg-[#0d1117]/80 border border-white/10 flex items-center justify-center hover:bg-emerald-500/20 hover:border-emerald-500/50 hover:text-emerald-400 transition-all hover:scale-110 shadow-lg backdrop-blur-md text-white/70" aria-label="Instagram">
+            <svg className="w-5 h-5 drop-shadow-md" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+          </a>
+          <a href="https://www.facebook.com/share/17ayJDcjTQ/?mibextid=wwXIfr" target="_blank" rel="noopener noreferrer" 
+             className="w-11 h-11 rounded-full bg-[#0d1117]/80 border border-white/10 flex items-center justify-center hover:bg-emerald-500/20 hover:border-emerald-500/50 hover:text-emerald-400 transition-all hover:scale-110 shadow-lg backdrop-blur-md text-white/70" aria-label="Facebook">
+            <svg className="w-5 h-5 drop-shadow-md" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.469h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.469h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+           </a>
+          <a href="https://chat.whatsapp.com/IpVXySLpKgjCPaXrwargwX?mode=gi_t" target="_blank" rel="noopener noreferrer" 
+             className="w-11 h-11 rounded-full bg-[#0d1117]/80 border border-white/10 flex items-center justify-center hover:bg-emerald-500/20 hover:border-emerald-500/50 hover:text-emerald-400 transition-all hover:scale-110 shadow-lg backdrop-blur-md text-white/70" aria-label="WhatsApp Group">
+            <svg className="w-5 h-5 drop-shadow-md" viewBox="0 0 32 32" fill="currentColor"><path d="M16 2C8.27 2 2 8.27 2 16c0 2.44.66 4.82 1.9 6.9L2 30l7.35-1.87A13.9 13.9 0 0016 30c7.73 0 14-6.27 14-14S23.73 2 16 2zm0 25.2a11.17 11.17 0 01-5.7-1.56l-.41-.24-4.36 1.11 1.14-4.25-.27-.44A11.2 11.2 0 1116 27.2zm6.14-8.35c-.34-.17-2-.98-2.3-1.09-.31-.11-.54-.17-.77.17-.22.34-.87 1.09-1.07 1.32-.2.22-.39.25-.73.08-.34-.17-1.44-.53-2.74-1.69a10.3 10.3 0 01-1.9-2.36c-.2-.34-.02-.52.15-.69l.5-.57c.16-.19.21-.34.32-.56.1-.22.05-.42-.03-.59-.08-.17-.77-1.86-1.06-2.55-.28-.67-.57-.58-.77-.59H9.7c-.22 0-.59.08-.9.42C8.48 10.64 7.6 11.5 7.6 13.2s1.16 3.36 1.32 3.6c.17.22 2.28 3.49 5.53 4.9.77.33 1.37.53 1.84.68.77.24 1.47.21 2.02.13.62-.09 1.9-.78 2.17-1.53.27-.75.27-1.4.19-1.53-.08-.14-.3-.22-.64-.38z" /></svg>
+          </a>
+        </div>
         
         <div className="max-w-4xl mx-auto text-center z-10 animate-fade-in-up">
           <span className="inline-flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-xs font-semibold px-4 py-1.5 rounded-full mb-8 backdrop-blur-md shadow-[0_0_20px_rgba(16,185,129,0.1)]">
@@ -281,16 +300,15 @@ export default function Home() {
 
                   <div className="px-6 sm:px-8 pb-6 sm:pb-8 pt-0 mt-auto">
                     <div className="pt-6 border-t border-slate-700/50">
-                      <a
-                        href={`https://wa.me/91XXXXXXXXXX?text=Hi I want to join ${encodeURIComponent(t.name)}`}
-                        target="_blank" rel="noopener noreferrer"
+                      <button
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); setBookingTrek(t); }}
                         className="relative overflow-hidden group/btn flex items-center justify-center gap-2.5 w-full py-4 rounded-xl font-bold text-sm text-white transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-[0_0_20px_rgba(37,211,102,0.4)] bg-[#25D366]">
                         <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover/btn:animate-[shimmer_1.5s_infinite]"></div>
                         <svg className="w-5 h-5 drop-shadow-sm" viewBox="0 0 32 32" fill="currentColor">
                           <path d="M16 2C8.27 2 2 8.27 2 16c0 2.44.66 4.82 1.9 6.9L2 30l7.35-1.87A13.9 13.9 0 0016 30c7.73 0 14-6.27 14-14S23.73 2 16 2zm0 25.2a11.17 11.17 0 01-5.7-1.56l-.41-.24-4.36 1.11 1.14-4.25-.27-.44A11.2 11.2 0 1116 27.2zm6.14-8.35c-.34-.17-2-.98-2.3-1.09-.31-.11-.54-.17-.77.17-.22.34-.87 1.09-1.07 1.32-.2.22-.39.25-.73.08-.34-.17-1.44-.53-2.74-1.69a10.3 10.3 0 01-1.9-2.36c-.2-.34-.02-.52.15-.69l.5-.57c.16-.19.21-.34.32-.56.1-.22.05-.42-.03-.59-.08-.17-.77-1.86-1.06-2.55-.28-.67-.57-.58-.77-.59H9.7c-.22 0-.59.08-.9.42C8.48 10.64 7.6 11.5 7.6 13.2s1.16 3.36 1.32 3.6c.17.22 2.28 3.49 5.53 4.9.77.33 1.37.53 1.84.68.77.24 1.47.21 2.02.13.62-.09 1.9-.78 2.17-1.53.27-.75.27-1.4.19-1.53-.08-.14-.3-.22-.64-.38z" />
                         </svg>
                         Book via WhatsApp
-                      </a>
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -376,6 +394,12 @@ export default function Home() {
           </div>
         </div>
       </footer>
+      
+      <BookingModal 
+        isOpen={!!bookingTrek} 
+        onClose={() => setBookingTrek(null)} 
+        trek={bookingTrek ? { id: bookingTrek.id, name: bookingTrek.name, date: bookingTrek.date } : null} 
+      />
     </div>
   );
 }

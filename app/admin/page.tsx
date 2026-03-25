@@ -18,6 +18,16 @@ type Trek = {
   description?: string;
 };
 
+type Booking = {
+  id: string;
+  userName: string;
+  userPhone: string;
+  trekId: string;
+  trekName: string;
+  trekDate: string;
+  createdAt: string;
+};
+
 /** Convert any Google Drive share link to a direct-embeddable URL */
 function toDriveImageUrl(url: string): string {
   if (!url?.trim()) return "";
@@ -46,6 +56,10 @@ export default function Admin() {
   const [saving, setSaving] = useState(false);
   const [loadingTreks, setLoadingTreks] = useState(true);
   const [generating, setGenerating] = useState(false);
+
+  const [activeTab, setActiveTab] = useState<"treks" | "bookings">("treks");
+  const [bookingsList, setBookingsList] = useState<Booking[]>([]);
+  const [loadingBookings, setLoadingBookings] = useState(true);
 
   // ✨ AI Description Generation
   const generateDescription = async () => {
@@ -98,6 +112,17 @@ export default function Admin() {
 
   useEffect(() => {
     fetchTreks();
+    const fetchBookings = async () => {
+      setLoadingBookings(true);
+      try {
+        const snapshot = await getDocs(collection(db, "bookings"));
+        const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() } as Booking));
+        data.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        setBookingsList(data);
+      } catch (err) { }
+      setLoadingBookings(false);
+    };
+    fetchBookings();
   }, []);
 
   // Image input handlers
@@ -296,60 +321,103 @@ export default function Admin() {
           </div>
         </div>
 
-        {/* ── Right Column: Treks List ─────────────────── */}
+        {/* ── Right Column: Treks/Bookings List ────────── */}
         <div className="flex-1">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold tracking-wide">Manage Treks</h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold tracking-wide">Admin Dashboard</h2>
             <button onClick={logout}
               className="hidden lg:block text-xs px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-red-400 hover:bg-red-500/10 transition">
               Logout
             </button>
           </div>
+          
+          <div className="flex gap-2 mb-6 border-b border-white/10 pb-4">
+            <button 
+              onClick={() => setActiveTab("treks")} 
+              className={`px-4 py-2 text-sm font-bold rounded-xl transition ${activeTab === "treks" ? "bg-white/10 text-emerald-400" : "text-white/50 hover:text-white"}`}>
+              Manage Treks
+            </button>
+            <button 
+              onClick={() => setActiveTab("bookings")} 
+              className={`px-4 py-2 text-sm font-bold rounded-xl transition ${activeTab === "bookings" ? "bg-white/10 text-emerald-400" : "text-white/50 hover:text-white"}`}>
+              Booking Leads
+            </button>
+          </div>
 
-          {loadingTreks ? (
-            <div className="space-y-3">
-              {[1, 2, 3].map((n) => <div key={n} className="h-20 bg-white/5 rounded-2xl animate-pulse" />)}
-            </div>
-          ) : treksList.length === 0 ? (
-            <div className="text-center py-12 border border-dashed border-white/10 rounded-2xl bg-white/5">
-              <p className="text-white/40">No treks found. Add one on the left!</p>
-            </div>
+          {activeTab === "treks" ? (
+            loadingTreks ? (
+              <div className="space-y-3">
+                {[1, 2, 3].map((n) => <div key={n} className="h-20 bg-white/5 rounded-2xl animate-pulse" />)}
+              </div>
+            ) : treksList.length === 0 ? (
+              <div className="text-center py-12 border border-dashed border-white/10 rounded-2xl bg-white/5">
+                <p className="text-white/40">No treks found. Add one on the left!</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {treksList.map((t) => {
+                  const isEditingThis = editingId === t.id;
+                  return (
+                    <div key={t.id}
+                      className={`flex items-center justify-between gap-4 p-4 rounded-xl border transition-all ${isEditingThis ? "bg-amber-500/10 border-amber-500/30 shadow-[0_0_15px_rgba(245,158,11,0.1)]" : "bg-white/5 border-white/10 hover:bg-white/10"}`}>
+                      
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className="font-bold truncate text-white/90">{t.name}</h3>
+                          <span className={`shrink-0 text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider font-bold ${t.status === "upcoming" ? "bg-green-500/20 text-green-400" : "bg-white/10 text-white/40"}`}>
+                            {t.status}
+                          </span>
+                        </div>
+                        <p className="text-xs text-white/40 truncate mt-1">
+                          {t.date} · {t.location} · ₹{t.price}
+                          {t.leader && ` · Leader: ${t.leader}`}
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-2 shrink-0">
+                        <button onClick={() => handleEdit(t)} disabled={saving}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${isEditingThis ? "bg-amber-500 text-white" : "bg-white/10 text-white/70 hover:bg-white/20 hover:text-white"} disabled:opacity-50`}>
+                          {isEditingThis ? "Editing.." : "Edit"}
+                        </button>
+                        
+                        <button onClick={() => handleDelete(t.id!, t.name)} disabled={saving}
+                          className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-red-500/10 text-red-400 hover:bg-red-500/20 transition disabled:opacity-50">
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )
           ) : (
-            <div className="space-y-3">
-              {treksList.map((t) => {
-                const isEditingThis = editingId === t.id;
-                return (
-                  <div key={t.id}
-                    className={`flex items-center justify-between gap-4 p-4 rounded-xl border transition-all ${isEditingThis ? "bg-amber-500/10 border-amber-500/30 shadow-[0_0_15px_rgba(245,158,11,0.1)]" : "bg-white/5 border-white/10 hover:bg-white/10"}`}>
-                    
+            loadingBookings ? (
+              <div className="space-y-3">
+                {[1, 2, 3].map((n) => <div key={n} className="h-20 bg-white/5 rounded-2xl animate-pulse" />)}
+              </div>
+            ) : bookingsList.length === 0 ? (
+              <div className="text-center py-12 border border-dashed border-white/10 rounded-2xl bg-white/5">
+                <p className="text-white/40">No inquiries yet.</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {bookingsList.map((b) => (
+                  <div key={b.id} className="flex items-center justify-between gap-4 p-4 rounded-xl border bg-white/5 border-white/10 hover:bg-white/10 transition-all">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
-                        <h3 className="font-bold truncate text-white/90">{t.name}</h3>
-                        <span className={`shrink-0 text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider font-bold ${t.status === "upcoming" ? "bg-green-500/20 text-green-400" : "bg-white/10 text-white/40"}`}>
-                          {t.status}
-                        </span>
+                        <h3 className="font-bold truncate text-white/90">{b.userName}</h3>
+                        <span className="text-[10px] text-white/40 bg-white/10 px-2 py-0.5 rounded-full">{new Date(b.createdAt).toLocaleDateString()}</span>
                       </div>
                       <p className="text-xs text-white/40 truncate mt-1">
-                        {t.date} · {t.location} · ₹{t.price}
-                        {t.leader && ` · Leader: ${t.leader}`}
+                        📞 <a href={`https://wa.me/91${b.userPhone}`} target="_blank" rel="noopener noreferrer" className="text-emerald-400 hover:underline">{b.userPhone}</a>
+                        <span className="mx-2">•</span> 
+                        Trek: {b.trekName} ({b.trekDate})
                       </p>
                     </div>
-
-                    <div className="flex items-center gap-2 shrink-0">
-                      <button onClick={() => handleEdit(t)} disabled={saving}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${isEditingThis ? "bg-amber-500 text-white" : "bg-white/10 text-white/70 hover:bg-white/20 hover:text-white"} disabled:opacity-50`}>
-                        {isEditingThis ? "Editing.." : "Edit"}
-                      </button>
-                      
-                      <button onClick={() => handleDelete(t.id!, t.name)} disabled={saving}
-                        className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-red-500/10 text-red-400 hover:bg-red-500/20 transition disabled:opacity-50">
-                        Delete
-                      </button>
-                    </div>
                   </div>
-                );
-              })}
-            </div>
+                ))}
+              </div>
+            )
           )}
         </div>
 

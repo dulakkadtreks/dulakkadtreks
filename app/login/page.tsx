@@ -28,7 +28,9 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0d1117] flex items-center justify-center p-4">
+    <div className="min-h-screen bg-[#0d1117] flex items-center justify-center p-4 relative overflow-hidden">
+      {/* generated image background */}
+      <div className="pointer-events-none absolute inset-0 z-0 bg-cover bg-center opacity-40 mix-blend-luminosity" style={{ backgroundImage: "url('/images/bg2.png')" }}></div>
       {/* background blobs matching admin panel */}
       <div className="pointer-events-none fixed inset-0 -z-10">
         <div className="absolute -top-24 -left-24 w-96 h-96 rounded-full opacity-30 blur-3xl"
@@ -37,7 +39,7 @@ export default function Login() {
           style={{ background: "radial-gradient(circle,#0891b2,transparent 70%)" }} />
       </div>
 
-      <div className="w-full max-w-md bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-8 shadow-2xl">
+      <div className="relative z-10 w-full max-w-md bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-8 shadow-2xl">
         <div className="flex justify-center mb-6">
           <span className="flex items-center gap-2 text-xs text-white/40 mb-1">
             <span className="w-2 h-2 rounded-full shadow-[0_0_6px_2px_currentColor] bg-green-400 text-green-400" />
