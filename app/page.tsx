@@ -14,6 +14,7 @@ type Trek = {
   status: string;
   image?: string;
   images?: string[];
+  description?: string;
 };
 
 /** Safety net: convert raw Drive share links to embeddable URLs */
@@ -269,6 +270,11 @@ export default function Home() {
                           <div className="w-8 h-8 rounded-full bg-violet-500/10 flex items-center justify-center text-violet-400 shrink-0">📍</div>
                           <span className="font-medium text-slate-200 line-clamp-1">{t.location}</span>
                         </div>
+                        {t.description && (
+                          <div className="mt-2 text-slate-400 line-clamp-2 text-sm">
+                            {t.description}
+                          </div>
+                        )}
                       </div>
                     </div>
                   </Link>

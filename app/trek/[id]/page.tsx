@@ -15,6 +15,7 @@ type Trek = {
   status: string;
   image?: string;
   images?: string[];
+  description?: string;
 };
 
 /** Convert any Google Drive share link to a direct-embeddable URL */
@@ -136,8 +137,21 @@ export default function TrekPage() {
       {/* ── Main Content ────────────────────────────── */}
       <main className="max-w-5xl mx-auto px-6 sm:px-12 mt-8 flex flex-col lg:flex-row gap-12">
         
-        {/* Gallery / Left */}
+        {/* Main Info & Gallery / Left */}
         <div className="flex-1">
+          {trek.description && (
+            <div className="mb-12">
+              <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
+                <span>📝</span> About This Trek
+              </h2>
+              <div className="text-white/80 leading-relaxed space-y-4 text-lg">
+                {trek.description.split('\n').map((paragraph, i) => (
+                  paragraph.trim() ? <p key={i}>{paragraph}</p> : null
+                ))}
+              </div>
+            </div>
+          )}
+
           <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
             <span>📸</span> Photo Gallery <span className="text-sm font-normal text-white/40">({imgs.length})</span>
           </h2>
